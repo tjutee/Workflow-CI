@@ -1,0 +1,20 @@
+name: CustomerSegmentation-MLflow
+
+conda_env: conda.yaml
+
+entry_points:
+  train:
+    parameters:
+      dataset_path:
+        description: "Path ke dataset yang sudah dipreprocess"
+        type: string
+        default: "data/Customer-Segmentation_preprocessing.csv"
+      n_clusters:
+        description: "Jumlah cluster untuk KMeans"
+        type: int
+        default: 3
+      random_state:
+        description: "Random state untuk reproducibility"
+        type: int
+        default: 42
+    command: "python modelling.py --dataset-path {dataset_path} --n-clusters {n_clusters} --random-state {random_state}"
