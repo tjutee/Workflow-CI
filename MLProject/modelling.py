@@ -1,4 +1,5 @@
 import os
+import argparse
 from pathlib import Path
 
 
@@ -16,20 +17,18 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
 
 
-DATA_PATH = BASE_DIR / "Customer-Segmentation_preprocessing.csv"
 MLRUNS_DIR = BASE_DIR / "mlruns"
 EXPERIMENT_NAME = "Customer Segmentation - Basic"
-RANDOM_STATE = 42
 
 
-def load_dataset() -> pd.DataFrame:
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"Dataset preprocessing tidak ditemukan: {DATA_PATH}")
-    return pd.read_csv(DATA_PATH)
+def load_dataset(data_path: str) -> pd.DataFrame:
+    if not Path(data_path).exists():
+        raise FileNotFoundError(f"Dataset preprocessing tidak ditemukan: {data_path}")
+    return pd.read_csv(data_path)
 
 
-def train_model(df: pd.DataFrame) -> tuple[KMeans, dict[str, float]]:
-    model = KMeans(n_clusters=3, random_state=RANDOM_STATE, n_init=10)
+def train_model(df: pd.DataFrame, n_clusters: int, random_state: int) -> tuple[KMeans, dict[str, float]]:
+    model = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=10)
     labels = model.fit_predict(df)
 
     metrics = {
@@ -50,8 +49,8 @@ def save_clustered_dataset(df: pd.DataFrame, labels) -> Path:
     return output_path
 
 
-def save_pca_projection(df: pd.DataFrame, labels) -> Path:
-    pca = PCA(n_components=2, random_state=RANDOM_STATE)
+def save_pca_projection(df: pd.DataFrame, labels, random_state: int) -> Path:
+    pca = PCA(n_components=2, random_state=random_state)
     projection = pca.fit_transform(df)
 
     output_path = BASE_DIR / "pca_projection_basic.csv"
@@ -67,20 +66,26 @@ def save_pca_projection(df: pd.DataFrame, labels) -> Path:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_path", type=str, required=True)
+    parser.add_argument("--n_clusters", type=int, default=3)
+    parser.add_argument("--random_state", type=int, default=42)
+    args = parser.parse_args()
+
     mlflow.set_tracking_uri(MLRUNS_DIR.as_uri())
     mlflow.set_experiment(EXPERIMENT_NAME)
     mlflow.sklearn.autolog()
 
-    df = load_dataset()
+    df = load_dataset(args.dataset_path)
 
     with mlflow.start_run(run_name="kmeans_basic_autolog"):
-        model, metrics = train_model(df)
+        model, metrics = train_model(df, args.n_clusters, args.random_state)
         mlflow.sklearn.autolog(disable=True)
         labels = model.labels_
 
         mlflow.log_metrics(metrics)
         mlflow.log_artifact(str(save_clustered_dataset(df, labels)))
-        mlflow.log_artifact(str(save_pca_projection(df, labels)))
+        mlflow.log_artifact(str(save_pca_projection(df, labels, args.random_state)))
 
         print("Model Basic selesai dilatih.")
         print(f"Tracking URI: {MLRUNS_DIR}")

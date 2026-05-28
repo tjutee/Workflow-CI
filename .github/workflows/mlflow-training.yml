@@ -20,12 +20,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip'
@@ -37,10 +37,7 @@ jobs:
       
       - name: Download dataset (if needed)
         run: |
-          mkdir -p data
-          # Jika dataset ada di repository, gunakan ini:
-          # (Sesuaikan dengan lokasi dataset Anda)
-          if [ ! -f data/Customer-Segmentation_preprocessing.csv ]; then
+          if [ ! -f MLProject/Customer-Segmentation_preprocessing.csv ]; then
             echo "Dataset belum ada, silakan upload ke repository atau ubah path"
             exit 1
           fi
@@ -49,14 +46,16 @@ jobs:
         working-directory: ./MLProject
         run: |
           mlflow run . \
-            --param dataset_path="../data/Customer-Segmentation_preprocessing.csv" \
-            --param n_clusters=3 \
-            --param random_state=42 \
-            -v
+            -e train \
+            --env-manager=local \
+            --experiment-name "Customer Segmentation - Basic" \
+            -P dataset_path="Customer-Segmentation_preprocessing.csv" \
+            -P n_clusters=3 \
+            -P random_state=42
       
       - name: Upload MLflow artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mlflow-artifacts
           path: |

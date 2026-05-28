@@ -8,7 +8,7 @@ entry_points:
       dataset_path:
         description: "Path ke dataset yang sudah dipreprocess"
         type: string
-        default: "data/Customer-Segmentation_preprocessing.csv"
+        default: "Customer-Segmentation_preprocessing.csv"
       n_clusters:
         description: "Jumlah cluster untuk KMeans"
         type: int
@@ -17,4 +17,4 @@ entry_points:
         description: "Random state untuk reproducibility"
         type: int
         default: 42
-    command: "python modelling.py --dataset-path {dataset_path} --n-clusters {n_clusters} --random-state {random_state}"
+    command: "python modelling.py --dataset_path {dataset_path} --n_clusters {n_clusters} --random_state {random_state}"

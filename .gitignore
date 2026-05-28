@@ -31,6 +31,8 @@ wheels/
 # Artifacts (but not dataset)
 MLProject/artifacts/
 artifacts/
+MLProject/Customer-Segmentation_clustered_basic.csv
+MLProject/pca_projection_basic.csv
 
 # IDE
 .vscode/
