@@ -1,7 +1,7 @@
-artifact_location: file:///C:/Users/silve/Documents/Pelatihan/Dicoding/Microsoft%20Elevate%202025/SMSML_Teja%20Endra%20Eng%20Tju/Workflow-CI/MLProject/mlruns/0
-creation_time: 1779961416624
+artifact_location: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/0
+creation_time: 1779962809226
 experiment_id: '0'
-last_update_time: 1779961416624
+last_update_time: 1779962809226
 lifecycle_stage: active
 name: Default
 trace_location: null
