@@ -1,13 +1,8 @@
-import os
 import argparse
 from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent
-TEMP_DIR = BASE_DIR / "tmp"
-TEMP_DIR.mkdir(exist_ok=True)
-os.environ["TMP"] = str(TEMP_DIR)
-os.environ["TEMP"] = str(TEMP_DIR)
 
 import mlflow
 import mlflow.sklearn
@@ -84,6 +79,7 @@ def main() -> None:
         labels = model.labels_
 
         mlflow.log_metrics(metrics)
+        mlflow.sklearn.log_model(model, artifact_path="model")
         mlflow.log_artifact(str(save_clustered_dataset(df, labels)))
         mlflow.log_artifact(str(save_pca_projection(df, labels, args.random_state)))
 

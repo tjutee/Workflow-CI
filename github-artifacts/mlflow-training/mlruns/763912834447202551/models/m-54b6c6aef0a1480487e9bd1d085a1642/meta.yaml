@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/silve/Documents/Pelatihan/Dicoding/Microsoft%20Elevate%202025/SMSML_Teja%20Endra%20Eng%20Tju/Workflow-CI/MLProject/mlruns/763912834447202551/models/m-54b6c6aef0a1480487e9bd1d085a1642/artifacts
+creation_timestamp: 1779961594333
+experiment_id: '763912834447202551'
+last_updated_timestamp: 1779961601889
+model_id: m-54b6c6aef0a1480487e9bd1d085a1642
+model_type: null
+name: model
+source_run_id: 35d24e3d8df548459b63e250e7ea8136
+status: 2
+status_message: null

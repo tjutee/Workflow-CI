@@ -14,6 +14,9 @@ on:
     - cron: '0 0 * * 1'
   workflow_dispatch:  # Allow manual trigger
 
+permissions:
+  contents: write
+
 jobs:
   train:
     runs-on: ubuntu-latest
@@ -52,6 +55,19 @@ jobs:
             -P dataset_path="Customer-Segmentation_preprocessing.csv" \
             -P n_clusters=3 \
             -P random_state=42
+
+      - name: Prepare artifacts for repository
+        if: always()
+        run: |
+          mkdir -p github-artifacts/mlflow-training
+          rm -rf github-artifacts/mlflow-training/*
+
+          if [ -d MLProject/mlruns ]; then
+            cp -R MLProject/mlruns github-artifacts/mlflow-training/mlruns
+          fi
+
+          cp MLProject/Customer-Segmentation_clustered_basic.csv github-artifacts/mlflow-training/ 2>/dev/null || true
+          cp MLProject/pca_projection_basic.csv github-artifacts/mlflow-training/ 2>/dev/null || true
       
       - name: Upload MLflow artifacts
         if: always()
@@ -61,7 +77,15 @@ jobs:
           path: |
             MLProject/mlruns/
             MLProject/artifacts/
+            github-artifacts/mlflow-training/
           retention-days: 30
+
+      - name: Commit artifacts to GitHub repository
+        if: github.event_name != 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update MLflow training artifacts [skip ci]"
+          file_pattern: github-artifacts/mlflow-training/**
       
       - name: Create run summary
         if: always()

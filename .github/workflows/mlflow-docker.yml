@@ -8,6 +8,9 @@ on:
       - '.github/workflows/mlflow-docker.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   train-and-build:
     runs-on: ubuntu-latest
@@ -58,7 +61,7 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
           # Dapatkan Run ID dari eksperimen terakhir via Python API
-          RUN_ID=$(python -c "import mlflow; runs = mlflow.search_runs(experiment_names=['Customer Segmentation - Basic']); print(runs.iloc[0].run_id)")
+          RUN_ID=$(python -c "import mlflow; runs = mlflow.search_runs(experiment_names=['Customer Segmentation - Basic'], order_by=['start_time DESC']); print(runs.iloc[0].run_id)")
           IMAGE_NAME="${DOCKER_USERNAME}/customer-segmentation"
 
           echo "Membangun Docker image menggunakan mlflow models build-docker untuk Run ID: $RUN_ID..."
@@ -70,6 +73,19 @@ jobs:
           echo "Memberikan tag versioning dan mendorong..."
           docker tag "$IMAGE_NAME:latest" "$IMAGE_NAME:${{ github.run_number }}"
           docker push "$IMAGE_NAME:${{ github.run_number }}"
+
+      - name: Prepare artifacts for repository
+        if: always()
+        run: |
+          mkdir -p github-artifacts/mlflow-docker
+          rm -rf github-artifacts/mlflow-docker/*
+
+          if [ -d MLProject/mlruns ]; then
+            cp -R MLProject/mlruns github-artifacts/mlflow-docker/mlruns
+          fi
+
+          cp MLProject/Customer-Segmentation_clustered_basic.csv github-artifacts/mlflow-docker/ 2>/dev/null || true
+          cp MLProject/pca_projection_basic.csv github-artifacts/mlflow-docker/ 2>/dev/null || true
       
       - name: Upload artifacts
         if: always()
@@ -79,4 +95,12 @@ jobs:
           path: |
             MLProject/mlruns/
             MLProject/artifacts/
+            github-artifacts/mlflow-docker/
           retention-days: 30
+
+      - name: Commit artifacts to GitHub repository
+        if: github.event_name != 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update MLflow Docker artifacts [skip ci]"
+          file_pattern: github-artifacts/mlflow-docker/**
