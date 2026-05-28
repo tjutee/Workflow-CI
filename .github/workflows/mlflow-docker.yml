@@ -91,6 +91,12 @@ jobs:
             exit 1
           fi
 
+          echo "Validasi repository Docker Hub: $IMAGE_NAME"
+          if ! curl -fsS "https://hub.docker.com/v2/repositories/$IMAGE_NAME/" >/dev/null; then
+            echo "::error::Repository Docker Hub '$IMAGE_NAME' tidak ditemukan/tertutup. Buat repository ini di Docker Hub lalu ulangi workflow."
+            exit 1
+          fi
+
           echo "RUN_ID: $RUN_ID"
           echo "IMAGE_NAME: $IMAGE_NAME"
           echo "Membangun Docker image dengan mlflow models build-docker..."
