@@ -74,19 +74,37 @@ jobs:
         if: success()
         working-directory: ./MLProject
         run: |
+          set -euo pipefail
+
           # Dapatkan Run ID dari eksperimen terakhir via Python API
-          RUN_ID=$(python -c "import mlflow; runs = mlflow.search_runs(experiment_names=['Customer Segmentation - Basic'], order_by=['start_time DESC']); print(runs.iloc[0].run_id)")
+          RUN_ID=$(python -c "import mlflow; runs = mlflow.search_runs(experiment_names=['Customer Segmentation - Basic'], order_by=['start_time DESC']); print(runs.iloc[0].run_id if len(runs) > 0 else '')")
           IMAGE_NAME="$DOCKER_IMAGE_NAME"
+          VERSION_TAG="${{ github.run_number }}"
 
-          echo "Membangun Docker image menggunakan mlflow models build-docker untuk Run ID: $RUN_ID..."
-          mlflow models build-docker -m "runs:/$RUN_ID/model" -n "$IMAGE_NAME:latest"
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::RUN_ID tidak ditemukan dari eksperimen 'Customer Segmentation - Basic'."
+            exit 1
+          fi
 
-          echo "Mendorong image ke Docker Hub..."
+          if [ -z "$IMAGE_NAME" ]; then
+            echo "::error::DOCKER_IMAGE_NAME kosong."
+            exit 1
+          fi
+
+          echo "RUN_ID: $RUN_ID"
+          echo "IMAGE_NAME: $IMAGE_NAME"
+          echo "Membangun Docker image dengan mlflow models build-docker..."
+          mlflow models build-docker -m "runs:/$RUN_ID/model" -n "$IMAGE_NAME"
+
+          echo "Validasi image lokal..."
+          docker image inspect "$IMAGE_NAME:latest" >/dev/null
+
+          echo "Mendorong image latest ke Docker Hub..."
           docker push "$IMAGE_NAME:latest"
 
           echo "Memberikan tag versioning dan mendorong..."
-          docker tag "$IMAGE_NAME:latest" "$IMAGE_NAME:${{ github.run_number }}"
-          docker push "$IMAGE_NAME:${{ github.run_number }}"
+          docker tag "$IMAGE_NAME:latest" "$IMAGE_NAME:$VERSION_TAG"
+          docker push "$IMAGE_NAME:$VERSION_TAG"
 
       - name: Prepare artifacts for repository
         if: always()
