@@ -6,7 +6,7 @@ on:
     paths:
       - 'MLProject/**'
       - '.github/workflows/mlflow-docker.yml'
-  workflow_dispatch:
+  workflow_dispatch: # Manual Docker image build
 
 permissions:
   contents: write
@@ -51,15 +51,15 @@ jobs:
       - name: Validate Docker Hub credentials
         if: success()
         env:
-          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_PASSWORD }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           if [ -z "$DOCKER_USERNAME" ]; then
             echo "::error::DOCKER_USERNAME belum diset di workflow."
             exit 1
           fi
 
-          if [ -z "$DOCKER_PASSWORD" ]; then
-            echo "::error::Secret DOCKERHUB_TOKEN atau DOCKER_PASSWORD belum diset di repository GitHub."
+          if [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "::error::Secret DOCKERHUB_TOKEN belum diset di repository GitHub."
             exit 1
           fi
       
@@ -68,7 +68,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       
       - name: Build and push Docker image using MLflow
         if: success()
