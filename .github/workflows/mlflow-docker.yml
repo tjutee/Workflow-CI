@@ -6,7 +6,7 @@ on:
     paths:
       - 'MLProject/**'
       - '.github/workflows/mlflow-docker.yml'
-  workflow_dispatch: # Manual Docker image build
+  workflow_dispatch: # Manual Docker image build (updated trigger)
 
 permissions:
   contents: write
