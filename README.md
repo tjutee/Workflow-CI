@@ -94,7 +94,7 @@ Alurnya:
 3. build image dengan:
 
 ```bash
-mlflow models build-docker -m "runs:/<RUN_ID>/model" -n "<DOCKER_USERNAME>/customer-segmentation:latest"
+mlflow models build-docker -m "runs:/<RUN_ID>/model" -n "tjutee/customer-segmentation:latest"
 ```
 
 4. push image ke Docker Hub dengan tag:
@@ -113,11 +113,10 @@ Gunakan Docker Hub access token, bukan password akun utama.
 5. Tambahkan repository secrets:
 
 ```text
-DOCKER_USERNAME = username Docker Hub
 DOCKERHUB_TOKEN = access token Docker Hub
 ```
 
-Workflow juga masih mendukung `DOCKER_PASSWORD`, tetapi `DOCKERHUB_TOKEN` lebih disarankan.
+Workflow sudah memakai username Docker Hub `tjutee`. Secret `DOCKER_PASSWORD` masih didukung sebagai fallback, tetapi `DOCKERHUB_TOKEN` lebih disarankan.
 
 Setelah secrets ditambahkan, jalankan manual:
 
@@ -128,7 +127,7 @@ GitHub > Actions > MLflow Training with Docker Build > Run workflow
 Jika berhasil, image akan tersedia di:
 
 ```text
-https://hub.docker.com/r/<DOCKER_USERNAME>/customer-segmentation
+https://hub.docker.com/r/tjutee/customer-segmentation
 ```
 
 ## Menjalankan Image
@@ -136,13 +135,13 @@ https://hub.docker.com/r/<DOCKER_USERNAME>/customer-segmentation
 Setelah image tersedia di Docker Hub:
 
 ```bash
-docker pull <DOCKER_USERNAME>/customer-segmentation:latest
+docker pull tjutee/customer-segmentation:latest
 ```
 
 MLflow model image biasanya berjalan sebagai model serving container. Contoh:
 
 ```bash
-docker run --rm -p 8080:8080 <DOCKER_USERNAME>/customer-segmentation:latest
+docker run --rm -p 8080:8080 tjutee/customer-segmentation:latest
 ```
 
 Endpoint prediksi dapat dipanggil dari `http://localhost:8080/invocations`.
@@ -160,11 +159,11 @@ Training mencatat metrik berikut ke MLflow:
 
 **Docker workflow gagal di validasi credentials**
 
-Tambahkan secret `DOCKER_USERNAME` dan `DOCKERHUB_TOKEN` di GitHub Actions secrets. Error ini berarti workflow belum menerima credential Docker Hub.
+Tambahkan secret `DOCKERHUB_TOKEN` di GitHub Actions secrets. Error ini berarti workflow belum menerima token Docker Hub.
 
 **Docker login gagal**
 
-Pastikan `DOCKER_USERNAME` sama dengan username Docker Hub, bukan email. Pastikan token masih aktif dan memiliki izin read/write.
+Pastikan token masih aktif, dibuat dari akun `tjutee`, dan memiliki izin read/write.
 
 **Image tidak muncul di Docker Hub**
 
