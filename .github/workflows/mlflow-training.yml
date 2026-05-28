@@ -45,16 +45,13 @@ jobs:
             exit 1
           fi
       
-      - name: Run MLflow Project Training
+      - name: Run MLflow Training
         working-directory: ./MLProject
         run: |
-          mlflow run . \
-            -e train \
-            --env-manager=local \
-            --experiment-name "Customer Segmentation - Basic" \
-            -P dataset_path="Customer-Segmentation_preprocessing.csv" \
-            -P n_clusters=3 \
-            -P random_state=42
+          python modelling.py \
+            --dataset_path "Customer-Segmentation_preprocessing.csv" \
+            --n_clusters 3 \
+            --random_state 42
 
       - name: Prepare artifacts for repository
         if: always()
@@ -81,7 +78,7 @@ jobs:
           retention-days: 30
 
       - name: Commit artifacts to GitHub repository
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && success()
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update MLflow training artifacts [skip ci]"

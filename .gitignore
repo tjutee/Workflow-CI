@@ -45,5 +45,11 @@ MLProject/pca_projection_basic.csv
 # MLflow tracking
 .mlruns/
 
+# GitHub CI artifact snapshots
+!github-artifacts/
+!github-artifacts/**
+!github-artifacts/**/mlruns/
+!github-artifacts/**/mlruns/**
+
 # Data (uncomment jika tidak ingin tracking data)
 # data/
