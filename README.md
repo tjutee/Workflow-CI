@@ -1,256 +1,189 @@
-# Workflow-CI: Customer Segmentation MLflow Project
+# Customer Segmentation MLflow Pipeline
 
-MLflow Project dengan CI/CD Pipeline menggunakan GitHub Actions untuk automated model training.
+Project ini melatih model clustering untuk segmentasi pelanggan menggunakan KMeans, MLflow Tracking, GitHub Actions, dan Docker Hub. Pipeline dibuat supaya proses training, pencatatan metrik, penyimpanan artefak, dan pembuatan image model bisa dijalankan ulang secara konsisten dari repository.
 
-## 📋 Project Structure
+## Ringkasan
 
+- Model: KMeans clustering
+- Tracking: MLflow local file store di folder `MLProject/mlruns`
+- Dataset utama: `MLProject/Customer-Segmentation_preprocessing.csv`
+- Artefak training: hasil cluster, PCA projection, MLflow run, dan model artifact
+- CI: GitHub Actions untuk training otomatis dan penyimpanan artefak
+- Docker: image dibuat dari model MLflow menggunakan `mlflow models build-docker`
+
+## Struktur Project
+
+```text
+.
+|-- .github/workflows/
+|   |-- mlflow-training.yml
+|   `-- mlflow-docker.yml
+|-- MLProject/
+|   |-- MLProject
+|   |-- Customer-Segmentation_preprocessing.csv
+|   |-- conda.yaml
+|   |-- modelling.py
+|   `-- requirements.txt
+|-- github-artifacts/
+|   `-- mlflow-training/
+|-- data/
+|-- Dockerfile
+`-- README.md
 ```
-Workflow-CI/
-├── .github/workflows/
-│   ├── mlflow-training.yml      # Skilled Level (3 pts)
-│   └── mlflow-docker.yml        # Advanced Level (4 pts)
-├── MLProject/
-│   ├── MLProject                # MLflow configuration
-│   ├── conda.yaml               # Environment definition  
-│   ├── modelling.py             # Training script
-│   └── requirements.txt          # Python dependencies
-├── Dockerfile                   # Docker configuration
-└── data/                        # Dataset folder (create manually)
-```
 
-## 🚀 Setup dalam 3 Langkah
+## Menjalankan Training Lokal
 
-### 1️⃣ Persiapan Dataset
+Install dependency:
 
 ```bash
-cd Workflow-CI
-mkdir -p data
-# Copy dataset dari folder preprocessing
-cp "../Eksperimen_SML_Teja Endra Eng Tju/preprocessing/Customer-Segmentation_preprocessing.csv" data/
+pip install -r MLProject/requirements.txt
 ```
 
-### 2️⃣ Push ke GitHub
+Jalankan training:
 
 ```bash
-git init
-git add .
-git commit -m "Initial MLflow CI/CD project"
-git remote add origin <your-github-repo-url>
-git push -u origin main
+cd MLProject
+python modelling.py \
+  --dataset_path Customer-Segmentation_preprocessing.csv \
+  --n_clusters 3 \
+  --random_state 42
 ```
 
-### 3️⃣ Setup Secrets (Untuk Advanced Level)
+Output lokal yang dihasilkan:
 
-**GitHub Settings → Secrets and variables → Actions**
+- `MLProject/mlruns/`
+- `MLProject/Customer-Segmentation_clustered_basic.csv`
+- `MLProject/pca_projection_basic.csv`
 
-Tambahkan:
-```
-DOCKER_USERNAME = docker_hub_username
-DOCKER_PASSWORD = docker_hub_access_token
-```
+File output lokal tersebut di-ignore dari Git karena artefak resmi disimpan melalui workflow ke `github-artifacts/`.
 
----
+## CI Training
 
-## 📊 Workflow Levels
+Workflow training ada di `.github/workflows/mlflow-training.yml`.
 
-### ✅ Level: Skilled (3 pts)
-**File:** `.github/workflows/mlflow-training.yml`
+Workflow ini berjalan saat:
 
-**Tahapan Workflow:**
-1. Checkout code dari repository
-2. Setup Python 3.10 environment
-3. Install dependencies (mlflow, scikit-learn, pandas, numpy)
-4. Verify dataset exists
-5. Run MLflow Project Training dengan parameters
-6. Log metrics & parameters ke MLflow
-7. Save artifacts (clustered data, PCA projection)
-8. **Upload artifacts ke GitHub** (retention 30 hari)
-9. Create run summary
+- push ke `main` atau `develop` untuk perubahan di `MLProject/`, `data/`, atau workflow training
+- pull request ke `main`
+- jadwal mingguan
+- manual run dari tab GitHub Actions
 
-**Trigger:** Push, PR, Schedule (weekly), Manual dispatch
+Yang dilakukan workflow:
 
----
+- setup Python
+- install dependency MLflow dan scikit-learn
+- validasi dataset
+- menjalankan `MLProject/modelling.py`
+- menyimpan MLflow artifacts sebagai GitHub Actions artifact
+- commit snapshot artefak ke `github-artifacts/mlflow-training/`
 
-### ✅ Level: Advanced (4 pts)  
-**File:** `.github/workflows/mlflow-docker.yml`
+Artefak terbaru dapat dilihat di repository pada folder:
 
-**Tahapan Workflow:**
-1. Checkout code dari repository
-2. Setup Python 3.10 environment
-3. Install dependencies
-4. Verify dataset exists
-5. Run MLflow Project Training
-6. Setup Docker Buildx untuk multi-platform builds
-7. Login ke Docker Hub (menggunakan secrets)
-8. **Build Docker image** dari Dockerfile
-9. **Push image ke Docker Hub** dengan versioning:
-   - Tag: `latest` (selalu latest)
-   - Tag: `<github-run-number>` (untuk versioning)
-
-**Trigger:** Push ke main, Manual dispatch
-
----
-
-## 🔧 Cara Kerja Workflow
-
-### Automatic Trigger
-Workflow akan otomatis berjalan ketika:
-- ✅ Push code ke branch `main`
-- ✅ Create/update Pull Request ke `main`
-- ✅ Schedule trigger (setiap Senin)
-- ✅ Manual trigger dari GitHub Actions UI
-
-### Manual Trigger
-```
-GitHub → Actions → MLflow CI Pipeline/Docker Build → Run workflow
+```text
+github-artifacts/mlflow-training/
 ```
 
-### Monitoring
-1. Go to repository `Actions` tab
-2. See workflow running in real-time
-3. Click workflow name untuk lihat details
-4. Download artifacts setelah selesai
+## Docker Image
 
----
+Workflow Docker ada di `.github/workflows/mlflow-docker.yml`.
 
-## 📦 Output & Artifacts
+Alurnya:
 
-### Metrics yang di-log:
-- Inertia
-- Silhouette Score
-- Calinski-Harabasz Score
-- Davies-Bouldin Score
-
-### Artifacts yang disimpan:
-- `Customer-Segmentation_clustered.csv` (data dengan cluster labels)
-- `pca_projection.csv` (2D PCA projection)
-- `mlruns/` folder (MLflow tracking data)
-
-### Download artifacts:
-- **Skilled:** GitHub Actions → Completed Workflow → Artifacts (30 hari)
-- **Advanced:** Docker Hub → Image layers (persistent)
-
----
-
-## 🔑 MLflow Project Parameters
-
-Ubah di file `MLProject/MLProject`:
-
-```yaml
-dataset_path:      Path ke dataset CSV
-n_clusters:        Jumlah cluster untuk KMeans (default: 3)
-random_state:      Random seed untuk reproducibility (default: 42)
-```
-
-Contoh custom parameters:
-```bash
-mlflow run ./MLProject \
-  -P n_clusters=5 \
-  -P random_state=123 \
-  -P dataset_path="data/Customer-Segmentation_preprocessing.csv"
-```
-
----
-
-## 🧪 Test Lokal (Optional)
+1. menjalankan training
+2. mengambil MLflow run terbaru
+3. build image dengan:
 
 ```bash
-# Install dependencies
-pip install mlflow scikit-learn pandas matplotlib numpy
-
-# Run training locally
-mlflow run ./MLProject
-
-# View results
-mlflow ui
-# Akses: http://localhost:5000
+mlflow models build-docker -m "runs:/<RUN_ID>/model" -n "<DOCKER_USERNAME>/customer-segmentation:latest"
 ```
 
----
+4. push image ke Docker Hub dengan tag:
 
-## 🐳 Docker Hub Setup (Advanced Level)
+- `latest`
+- nomor run GitHub Actions, misalnya `12`
 
-### 1. Create Docker Hub Account
-https://hub.docker.com → Sign up
+### Setup Docker Hub Paling Mudah
 
-### 2. Create Repository  
-Dashboard → Repositories → Create → Name: `customer-segmentation`
+Gunakan Docker Hub access token, bukan password akun utama.
 
-### 3. Generate Access Token
-Account Settings → Security → New Access Token
+1. Buka Docker Hub.
+2. Masuk ke `Account settings > Security`.
+3. Buat access token baru.
+4. Di GitHub repository, buka `Settings > Secrets and variables > Actions`.
+5. Tambahkan repository secrets:
 
-### 4. Add GitHub Secrets
-Repo Settings → Secrets and variables → Actions:
-- `DOCKER_USERNAME` = your_docker_username
-- `DOCKER_PASSWORD` = dckr_pat_XXXXXXXXXXX
+```text
+DOCKER_USERNAME = username Docker Hub
+DOCKERHUB_TOKEN = access token Docker Hub
+```
 
-### 5. Trigger Workflow
-Actions tab → MLflow Training with Docker Build → Run workflow
+Workflow juga masih mendukung `DOCKER_PASSWORD`, tetapi `DOCKERHUB_TOKEN` lebih disarankan.
 
-### 6. Verify
-Docker Hub → Repositories → customer-segmentation → Tags
+Setelah secrets ditambahkan, jalankan manual:
 
----
+```text
+GitHub > Actions > MLflow Training with Docker Build > Run workflow
+```
 
-## ✅ Checklist Penyelesaian
+Jika berhasil, image akan tersedia di:
 
-- [ ] Repository dibuat di GitHub (Public visibility)
-- [ ] Dataset di-copy ke folder `data/`
-- [ ] Code di-push ke GitHub branch `main`
-- [ ] GitHub Actions enabled dan workflow terdeteksi
-- [ ] Test: Push code → Workflow berjalan → Download artifacts
-- [ ] (Advanced) Docker Hub account created
-- [ ] (Advanced) Repository created di Docker Hub
-- [ ] (Advanced) Secrets ditambahkan: DOCKER_USERNAME & DOCKER_PASSWORD
-- [ ] (Advanced) Test: Workflow berjalan → Image pushed to Docker Hub
+```text
+https://hub.docker.com/r/<DOCKER_USERNAME>/customer-segmentation
+```
 
----
+## Menjalankan Image
 
-## 🆘 Troubleshooting
+Setelah image tersedia di Docker Hub:
 
-| Error | Solusi |
-|-------|--------|
-| Dataset tidak ditemukan | Pastikan file ada di `data/Customer-Segmentation_preprocessing.csv` |
-| Workflow tidak trigger | Check: Code di-push ke `main` branch, file path sesuai di workflow |
-| Docker login gagal | Verify secrets DOCKER_USERNAME & DOCKER_PASSWORD |
-| Artifacts tidak upload | Check disk space, verify permissions |
-
----
-
-## 📚 Documentation
-
-- [MLflow Docs](https://mlflow.org/docs/latest/)
-- [GitHub Actions](https://docs.github.com/en/actions)
-- [Docker Hub](https://hub.docker.com/)
-
----
-
-**Achievement Level:** ✅ Advanced (4 pts)
-
-Example:
 ```bash
-mlflow run ./MLProject -P n_clusters=5 -P random_state=123
+docker pull <DOCKER_USERNAME>/customer-segmentation:latest
 ```
 
-## GitHub Actions
+MLflow model image biasanya berjalan sebagai model serving container. Contoh:
 
-Workflows trigger automatically on:
-- Push to `main` or `develop`
-- Pull requests to `main`
-- Weekly schedule (Monday 00:00 UTC)
-- Manual trigger via UI
+```bash
+docker run --rm -p 8080:8080 <DOCKER_USERNAME>/customer-segmentation:latest
+```
 
-## Docker Hub Setup (Optional)
+Endpoint prediksi dapat dipanggil dari `http://localhost:8080/invocations`.
 
-For Advanced level with Docker images:
+## Metrik
 
-1. Create Docker Hub account and repository
-2. Add GitHub secrets:
-   - `DOCKER_USERNAME`
-   - `DOCKER_PASSWORD`
-3. Trigger `mlflow-docker.yml` workflow
+Training mencatat metrik berikut ke MLflow:
 
-## Links
+- inertia
+- silhouette_score
+- calinski_harabasz_score
+- davies_bouldin_score
 
-- [MLflow Documentation](https://mlflow.org/docs/latest/)
-- [GitHub Actions](https://docs.github.com/en/actions)
+## Troubleshooting
+
+**Docker workflow gagal di validasi credentials**
+
+Tambahkan secret `DOCKER_USERNAME` dan `DOCKERHUB_TOKEN` di GitHub Actions secrets. Error ini berarti workflow belum menerima credential Docker Hub.
+
+**Docker login gagal**
+
+Pastikan `DOCKER_USERNAME` sama dengan username Docker Hub, bukan email. Pastikan token masih aktif dan memiliki izin read/write.
+
+**Image tidak muncul di Docker Hub**
+
+Cek step `Build and push Docker image using MLflow` di GitHub Actions. Jika login sukses tetapi push gagal, pastikan repository `customer-segmentation` bisa dibuat otomatis oleh akun tersebut atau buat manual lebih dulu di Docker Hub.
+
+**Training gagal karena dataset tidak ditemukan**
+
+Pastikan file berikut ada:
+
+```text
+MLProject/Customer-Segmentation_preprocessing.csv
+```
+
+**Artefak tidak berubah di repository**
+
+Workflow hanya melakukan commit artefak jika training sukses dan event bukan pull request.
+
+## Link
+
+- Repository: https://github.com/tjutee/Workflow-CI
+- GitHub Actions: https://github.com/tjutee/Workflow-CI/actions
+- MLflow documentation: https://mlflow.org/docs/latest/
