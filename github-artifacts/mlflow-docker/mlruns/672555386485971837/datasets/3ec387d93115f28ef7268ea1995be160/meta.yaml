@@ -1,0 +1,11 @@
+digest: 68af2e5a
+name: dataset
+profile: '{"num_rows": 2500, "num_elements": 15000}'
+schema: '{"mlflow_colspec": [{"type": "double", "name": "Age", "required": true},
+  {"type": "double", "name": "AnnualIncome", "required": true}, {"type": "double",
+  "name": "AverageTransactionValue", "required": true}, {"type": "double", "name":
+  "DiscountSensitivity", "required": true}, {"type": "double", "name": "ShoppingFrequency",
+  "required": true}, {"type": "double", "name": "AgeGroup", "required": true}]}'
+source: '{"tags": {"mlflow.user": "runner", "mlflow.source.name": "modelling.py",
+  "mlflow.source.type": "LOCAL", "mlflow.source.git.commit": "5c2cccb88846b89f4ad07ee2daee88e2495e06d5"}}'
+source_type: code

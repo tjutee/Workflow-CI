@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/672555386485971837/0b0a9bfb11c946eb9fbc8d677572f104/artifacts
+end_time: 1780069957972
+entry_point_name: ''
+experiment_id: '672555386485971837'
+lifecycle_stage: active
+run_id: 0b0a9bfb11c946eb9fbc8d677572f104
+run_name: kmeans_basic_autolog
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780069949830
+status: 3
+tags: []
+user_id: runner
