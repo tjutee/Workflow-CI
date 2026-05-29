@@ -17,6 +17,7 @@ jobs:
     env:
       DOCKER_USERNAME: tjutee
       DOCKER_IMAGE_NAME: tjutee/customer-segmentation
+      MLFLOW_TRACKING_URI: file://${{ github.workspace }}/MLProject/mlruns
     
     steps:
       - name: Checkout code
@@ -42,7 +43,7 @@ jobs:
       
       - name: Run MLflow Training
         run: |
-          mlflow run MLProject --env-manager=local -e train \
+          mlflow run MLProject --env-manager=local --experiment-name "Customer Segmentation - Basic" -e train \
             -P dataset_path="Customer-Segmentation_preprocessing.csv" \
             -P n_clusters=3 \
             -P random_state=42
